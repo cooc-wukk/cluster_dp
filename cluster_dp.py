@@ -265,7 +265,7 @@ def draw(rho, delta, mark):
 
 #加载数据
 dataSet = loadDataFromFile('data/11.txt')
-#print(dataSet)
+
 #计算或加载数据集的距离矩阵、阈值dc
 dist,dc = getDist(dataSet, 0.02)
 #dist,dc = getDistFromFile('data/clusting/Compound_dist.txt')
@@ -291,12 +291,16 @@ num, mark,imark = getMark(rho, delta, nneigh, rhomin, deltamin)
 
 # 处理噪音
 halo = getHalo(mark, num, imark, dist, dc)
+print("halo over")
+
+# 输出结果
+ifile = open('data/result.txt', 'w')
+for i in range(len(dataSet)):
+    strs = str(float(dataSet[i][0])) + ',' + str(float(dataSet[i][0])) + ',' + str(int(halo[i])) + '\n'
+    ifile.write(strs)
+ifile.close()
+print("output over")
 
 #绘制结果
 draw(rho, delta, halo)
-
-
-# In[ ]:
-
-
-
+print("draw over")
