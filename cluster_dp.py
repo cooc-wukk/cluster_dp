@@ -65,7 +65,7 @@ def getDist(location, percent = 0.02, distComp = distEclud):
     position = int(len(ldist) * percent)
     sortedll = sort(ldist)
     dc = sortedll[position - 1] #计算阈值dc
-    print('average percentage of neighbours (hard coded)：', percent)    
+    print('average percentage of neighbours (hard coded):', percent)    
     return dist,dc
 
 ### load data 返回数据集的点坐标
@@ -96,7 +96,7 @@ def getDistFromFile(fileName, percent=0.02):
     position = int(n * percent)
     sortedSet = sort(set[:,2])
     dc = sortedSet[position - 1] #计算阈值dc
-    print('average percentage of neighbours (hard coded)：', percent)
+    print('average percentage of neighbours (hard coded):', percent)
     return dist,dc
 
 
@@ -111,8 +111,8 @@ def getDistFromFile(fileName, percent=0.02):
 def calDensity(dist, dc):
     length = shape(dist)[0]
     rho = zeros(length)
-    print('Computing Rho with gaussian kernel of radius：',dc)
-#    print('Computing Rho with cut-off kernel of radius：',dc)
+    print('Computing Rho with gaussian kernel of radius:',dc)
+#    print('Computing Rho with cut-off kernel of radius:',dc)
     for i in range(length - 1):
         for j in range(length - i - 1):
             jj = j + i + 1
@@ -170,7 +170,7 @@ def getMark(rho, delta, nneigh, rhomin, deltamin):
     print('Performing assignation')
     for i in range(length):
         if mark[ordrho[i]] == -1:
-            mark[ordrho[i]] = mark[nneigh[ordrho[i]]]
+            mark[ordrho[i]] = mark[int(nneigh[int(ordrho[i])])]
 
     return num,mark,imark
 
@@ -206,8 +206,8 @@ def getHalo(mark, nclust, imark, dist, dc):
                 na = na + 1
             if halo[j] == i:
                 nc = nc + 1
-        cord = 'CLUSTER： ' + str(i + 1) + ' CENTER： ' + str(imark[i])
-        cord = cord + ' ELEMENTS： ' + str(na) + ' CORE： ' + str(nc) + ' HALO： ' + str(na - nc)
+        cord = 'CLUSTER: ' + str(i + 1) + ' CENTER: ' + str(imark[i])
+        cord = cord + ' ELEMENTS: ' + str(na) + ' CORE: ' + str(nc) + ' HALO: ' + str(na - nc)
         print(cord)
     return halo
 
@@ -264,7 +264,7 @@ def draw(rho, delta, mark):
 # In[31]:
 
 #加载数据
-dataSet = loadDataFromFile('data/11.txt')
+dataSet = loadDataFromFile('data/whcmilogare.txt')
 
 #计算或加载数据集的距离矩阵、阈值dc
 dist,dc = getDist(dataSet, 0.02)
@@ -273,7 +273,7 @@ dist,dc = getDist(dataSet, 0.02)
 
 #求点的局部密度(local density)
 rho = calDensity(dist, dc)
-#print('当前数据集所有点的局部密度为：',rho)
+#print('当前数据集所有点的局部密度为:',rho)
 
 #求比点的局部密度大的点到该点的最小距离即 delta 距离
 delta, nneigh = calDelta(dist, rho)
@@ -287,7 +287,7 @@ rhomin = 2; deltamin = 1    #Spiral
 
 #确定聚类类别，将所有数据点归类
 num, mark,imark = getMark(rho, delta, nneigh, rhomin, deltamin)
-#print('当前数据集聚类标签为：', mark)
+#print('当前数据集聚类标签为:', mark)
 
 # 处理噪音
 halo = getHalo(mark, num, imark, dist, dc)
