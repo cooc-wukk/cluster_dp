@@ -1,14 +1,14 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 from numpy import *
 import matplotlib.pyplot as plt
 
 import numpy as np
 
-
-# In[27]:
 def read_file(file):
     for line in file:
         yield line.strip()
-
 
 # load data
 def loadDataFromFile(fileName):
@@ -34,13 +34,10 @@ def loadDataFromFile(fileName):
 
     return location
 
-
-#
 def distEclud(vecA, vecB):
     return sqrt(sum(power(vecA - vecB, 2)))
 
 
-#
 def distSLC(vecA, vecB):  # Spherical Law of Cosines
     lon1, lat1, lon2, lat2 = map(radians, [vecA[0], vecA[1], vecB[0], vecB[1]])
     dlon = lon2 - lon1
@@ -148,8 +145,6 @@ def getMark(rho, delta, nneigh, rhomin, deltamin):
 
 
 # In[29]:
-
-#
 def getHalo(mark, nclust, imark, dist, dc):
     length = len(mark)
     bord_rho = zeros(nclust)
@@ -183,7 +178,47 @@ def getHalo(mark, nclust, imark, dist, dc):
         print(cord)
     return halo
 
+### 噪声点分类（考虑噪声点之间的影响，先对距离最近的噪声点分类，后面噪声点的分类考虑之前已分类的噪声点）
 def setHalo(dataSet, halo):
+    X = []
+    Y = []
+    leibie = []
+
+    for i in range(len(dataSet)):
+        X.append(float(dataSet[i][0]))
+        Y.append(float(dataSet[i][1]))
+        leibie.append(int(halo[i]))
+
+    def setNext():
+        indexs = []
+        types = []
+        distances = []
+        for i in range(len(X)):
+            if leibie[i] == -1:
+                Assenst = []
+                AssenstId = []
+                for j in range(len(X)):
+                    if leibie[j] != -1:
+                        ass = (X[i] - X[j]) * (X[i] - X[j]) + (Y[i] - Y[j]) * (Y[i] - Y[j])
+                        Assenst.append(ass)
+                        AssenstId.append(leibie[j])
+                minDistance = min(Assenst)
+                weizhi = Assenst.index(minDistance)
+                indexs.append(i)
+                types.append(AssenstId[weizhi])
+                distances.append(minDistance)
+        if len(indexs) > 0:
+            minDistance = min(distances)
+            weizhi = distances.index(minDistance)
+            leibie[indexs[weizhi]] = types[weizhi]
+
+    for i in range(len(X)):
+        setNext()
+
+    return leibie
+
+### 噪声点分类（不考虑噪声点之间的影响）
+def setHalo_2(dataSet, halo):
     X = []
     Y = []
     leibie = []
@@ -196,6 +231,31 @@ def setHalo(dataSet, halo):
         result.append(int(halo[i]))
 
     for i in range(len(X)):
+        if result[i] == -1:
+            Assenst = []
+            AssenstId = []
+            for j in range(len(X)):
+                if leibie[j] != -1:
+                    ass = (X[i] - X[j]) * (X[i] - X[j]) + (Y[i] - Y[j]) * (Y[i] - Y[j])
+                    Assenst.append(ass)
+                    AssenstId.append(leibie[j])
+            order = Assenst.index(min(Assenst))
+            result[i] = AssenstId[order]
+
+    return result
+
+### 噪声点分类（考虑噪声点之间的影响，但是噪声点按id顺序依次分类，后面的噪声点分类考虑之前已分类的噪声点，该方法最不合理）
+def setHalo_3(dataSet, halo):
+    X = []
+    Y = []
+    leibie = []
+
+    for i in range(len(dataSet)):
+        X.append(float(dataSet[i][0]))
+        Y.append(float(dataSet[i][1]))
+        leibie.append(int(halo[i]))
+
+    for i in range(len(X)):
         if leibie[i] == -1:
             Assenst = []
             AssenstId = []
@@ -204,10 +264,12 @@ def setHalo(dataSet, halo):
                     ass = (X[i] - X[j]) * (X[i] - X[j]) + (Y[i] - Y[j]) * (Y[i] - Y[j])
                     Assenst.append(ass)
                     AssenstId.append(leibie[j])
-            weizhi = Assenst.index(min(Assenst))
-            result[i] = AssenstId[weizhi]
-    leibie1 = np.array(result)
-    return leibie1
+            order = Assenst.index(min(Assenst))
+            leibie[i] = AssenstId[order]
+
+    return leibie
+
+
 def arrLeb(x, y, label):
     r_mean = []
     xy_result = np.transpose(np.vstack((x, y, label)))
@@ -219,11 +281,9 @@ def arrLeb(x, y, label):
     index = r_mean.index(max(r_mean))
     xy_result = np.where(xy_result[:, 2] == labels[index], 0, 1)
     return xy_result
+
 # In[30]:
-
 def draw(rho, delta, mark):
-
-
     R = array(range(256))
     R_0 = R[200]
     R_0 = R_0 / 255.0
@@ -294,13 +354,8 @@ print('the type of this dataset is', num)
 
 #
 halo = getHalo(mark, num, imark, dist, dc)
-leb_hh = setHalo(dataSet, halo)
+leb_hh = setHalo_2(dataSet, halo)
 newleb = arrLeb(dataSet[:,0], dataSet[:,1], leb_hh)
 
-draw(rho, delta, halo)
+draw(rho, delta, leb_hh)
 # draw(rho, delta, mark)
-
-
-
-
-
